@@ -1,21 +1,22 @@
-import hashlib
+from dotenv import load_dotenv
 from tkinter import *
 from vidstream import *
 import socket
 import threading
 from tkinter import filedialog
-from tkinter import messagebox
 import os
 
+load_dotenv()
+
 root = Tk()
-root.title("Quick Share!")
+root.title("ShareNet")
 root.geometry("450x560+500+200")
-root.configure(bg="#f4fdfe")
+root.configure(bg=os.getenv('primary'))
 root.resizable(False, False)
 host = socket.gethostname()
 local_ip_address = socket.gethostbyname(host)
-server = StreamingServer(local_ip_address, 9999)
-receiver = AudioReceiver(local_ip_address, 8888)
+server = StreamingServer(local_ip_address, 8888)
+receiver = AudioReceiver(local_ip_address, 9999)
 
 
 def screen_share():
@@ -23,13 +24,13 @@ def screen_share():
     window = Toplevel(root)
     window.title("Other Share")
     window.geometry('450x560+500+200')
-    window.configure(bg='#f4fdfe')
+    window.configure(bg=os.getenv('primary'))
     window.resizable(False, False)
 
     def video_btn():
         print("share your video")
         global camera_client
-        camera_client = CameraClient(SenderID.get(), 7777)
+        camera_client = CameraClient(SenderID.get(), 9999)
         t3 = threading.Thread(target=camera_client.start_stream)
         t3.start()
 
@@ -53,7 +54,7 @@ def screen_share():
     def share_audio_btn():
         print("share your audio button pressed")
         global audio_sender
-        audio_sender = AudioSender(SenderID.get(), 6666)
+        audio_sender = AudioSender(SenderID.get(), 8888)
         t5 = threading.Thread(target=audio_sender.start_stream)
         t5.start()
 
@@ -120,9 +121,6 @@ def file_transfer():
     label2.destroy()
     label3.destroy()
 
-    # file_trans.destroy()
-    # scrn_share.destroy()
-
     def back_press():
         label11.destroy()
         label22.destroy()
@@ -130,7 +128,7 @@ def file_transfer():
         bck.destroy()
 
         global label1
-        label1 = Label(root, text="Welcome!!", font=('Acumin Variable Concept', 20, 'bold'), bg="#f4fdfe")
+        label1 = Label(root, text="Welcome!!", font=('Acumin Variable Concept', 20, 'bold'), bg=os.getenv('primary'))
         label1.place(x=20, y=30)
 
         # Frame(root, width=400, height=2, bg="#f3f5f6", bd=0).place(x=25, y=80)
@@ -138,19 +136,19 @@ def file_transfer():
         global scrn_image
         scrn_image = PhotoImage(file="image/scrn_share.png")
         global scrn_share
-        scrn_share = Button(root, image=scrn_image, bg="#f4fdfe", bd=0, command=screen_share)
+        scrn_share = Button(root, image=scrn_image, bg=os.getenv('primary'), bd=0, command=screen_share)
         scrn_share.place(x=50, y=100)
 
         global file_image
         file_image = PhotoImage(file="image/file_transfer.png")
         global file_trans
-        file_trans = Button(root, image=file_image, bg="#f4fdfe", bd=0, command=file_transfer)
+        file_trans = Button(root, image=file_image, bg=os.getenv('primary'), bd=0, command=file_transfer)
         file_trans.place(x=300, y=100)
         global label2
-        label2 = Label(root, text="Screen Share", font=('Acumin Variable Concept', 17, 'bold'), bg="#f4fdfe")
+        label2 = Label(root, text="Screen Share", font=('Acumin Variable Concept', 17, 'bold'), bg=os.getenv('primary'))
         label2.place(x=40, y=200)
         global label3
-        label3 = Label(root, text="File Transfer", font=('Acumin Variable Concept', 17, 'bold'), bg="#f4fdfe")
+        label3 = Label(root, text="File Transfer", font=('Acumin Variable Concept', 17, 'bold'), bg=os.getenv('primary'))
         label3.place(x=280, y=200)
 
     # def catch_minimize(event):
@@ -168,8 +166,8 @@ def file_transfer():
         def select_file():
             global filename
             global basename
-            file = filedialog.askopenfile(initialdir=os.getcwd(), title='Select image File',
-                                          filetypes=(('file type', '*.txt'), ('all files', '*.*')))
+            file = filedialog.askopenfile(initialdir=os.getcwd(), title='Select a File',
+                                          filetypes=[('All Files', '*.*')])
             if file:
                 filename = file.name
                 basename = os.path.basename(filename)
@@ -220,10 +218,12 @@ def file_transfer():
                                             cwnd *= 2
                                         else:
                                             cwnd += 1
+                                    print(cwnd)
                                     # print(f"Packet {current_packet} acknowledged.")
                                 except:
-                                    ssthresh = max(cwnd / 2, 1)
-                                    cwnd = 1
+                                    ssthresh=max(cwnd/2,1)
+                                    cwnd=1
+
                                     continue
                     else:
                         print('sz not rcvd')
@@ -233,6 +233,7 @@ def file_transfer():
                 Label(window, text=f'Data has been transmitted successfully...', font=('Acumin Variable Concept', 13,),
                       bg='#7FFFD4', fg="#000").place(
                     x=90, y=350)
+
         def back_btn():
             window.withdraw()
             root.deiconify()
@@ -292,7 +293,7 @@ def file_transfer():
             filename1 = s.recv(1024).decode()
             print(filename1)
             s.send("OK".encode())
-            rcv = "RECEIVE\\" + filename1
+            rcv = "receive/" + filename1
             sz = s.recv(1024).decode()
             print(sz)
             sz = int(sz)
@@ -307,9 +308,8 @@ def file_transfer():
                         if not file_data:
                             break
                         file.write(file_data)
-                        s.send("ACK".encode())  # sending ACK for each packet received
+                        s.send("ACK".encode()) 
                         current_packet += 1
-                        # print(f"Packet {current_packet} received.")
                     except:
                         continue
             print(f"Total {current_packet} Packet  received.")
@@ -356,26 +356,26 @@ def file_transfer():
         main.mainloop()
 
     global label11
-    label11 = Label(root, text="File transfer", font=('Acumin Variable Concept', 20, 'bold'), bg="#f4fdfe")
+    label11 = Label(root, text="File transfer", font=('Acumin Variable Concept', 20, 'bold'), bg=os.getenv('primary'))
     label11.place(x=20,
                   y=30)
 
     Frame(root, width=400, height=2, bg="#f3f5f6", bd=0).place(x=25, y=80)
 
     send_image = PhotoImage(file="image/send_fin.png")
-    send = Button(root, image=send_image, bg="#f4fdfe", bd=0, command=Send)
+    send = Button(root, image=send_image, bg=os.getenv('primary'), bd=0, command=Send)
     send.place(x=50, y=100)
 
     rcv_image = PhotoImage(file="image/rcv_fin.png")
-    rcv = Button(root, image=rcv_image, bg="#f4fdfe", bd=0, command=Receive)
+    rcv = Button(root, image=rcv_image, bg=os.getenv('primary'), bd=0, command=Receive)
     rcv.place(x=300, y=100)
 
     global label22
-    label22 = Label(root, text="Send", font=('Acumin Variable Concept', 17, 'bold'), bg="#f4fdfe")
+    label22 = Label(root, text="Send", font=('Acumin Variable Concept', 17, 'bold'), bg=os.getenv('primary'))
     label22.place(x=60, y=200)
 
     global label33
-    label33 = Label(root, text="Receive", font=('Acumin Variable Concept', 17, 'bold'), bg="#f4fdfe")
+    label33 = Label(root, text="Receive", font=('Acumin Variable Concept', 17, 'bold'), bg=os.getenv('primary'))
     label33.place(x=300, y=200)
 
     bck = Button(root, text="Back", width=10, height=1, font='arial 14 bold', bg='#7FFFD4', fg="#000",
@@ -388,7 +388,7 @@ def file_transfer():
 image_icon = PhotoImage(file="image/Neon Blue and Black Gamer Badge Logo (1).png")
 root.iconphoto(False, image_icon)
 global label1
-label1 = Label(root, text="Welcome!!", font=('Acumin Variable Concept', 20, 'bold'), bg="#f4fdfe")
+label1 = Label(root, text="Welcome!!", font=('Acumin Variable Concept', 20, 'bold'), bg=os.getenv('primary'))
 label1.place(x=20, y=30)
 
 Frame(root, width=400, height=2, bg="#f3f5f6", bd=0).place(x=25, y=80)
@@ -396,19 +396,19 @@ Frame(root, width=400, height=2, bg="#f3f5f6", bd=0).place(x=25, y=80)
 global scrn_image
 scrn_image = PhotoImage(file="image/scrn_share.png")
 global scrn_share
-scrn_share = Button(root, image=scrn_image, bg="#f4fdfe", bd=0, command=screen_share)
+scrn_share = Button(root, image=scrn_image, bg=os.getenv('primary'), bd=0, command=screen_share)
 scrn_share.place(x=50, y=100)
 
 global file_image
 file_image = PhotoImage(file="image/file_transfer.png")
 global file_trans
-file_trans = Button(root, image=file_image, bg="#f4fdfe", bd=0, command=file_transfer)
+file_trans = Button(root, image=file_image, bg=os.getenv('primary'), bd=0, command=file_transfer)
 file_trans.place(x=300, y=100)
 global label2
-label2 = Label(root, text="Other Share", font=('Acumin Variable Concept', 17, 'bold'), bg="#f4fdfe")
+label2 = Label(root, text="Other Share", font=('Acumin Variable Concept', 17, 'bold'), bg=os.getenv('primary'))
 label2.place(x=40, y=200)
 global label3
-label3 = Label(root, text="File Transfer", font=('Acumin Variable Concept', 17, 'bold'), bg="#f4fdfe")
+label3 = Label(root, text="File Transfer", font=('Acumin Variable Concept', 17, 'bold'), bg=os.getenv('primary'))
 label3.place(x=280, y=200)
 
 background = PhotoImage(file="image/background.png")

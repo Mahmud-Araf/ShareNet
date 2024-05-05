@@ -293,7 +293,7 @@ def file_transfer():
             filename1 = s.recv(1024).decode()
             print(filename1)
             s.send("OK".encode())
-            rcv = "receive\\" + filename1
+            rcv = "receive/" + filename1
             sz = s.recv(1024).decode()
             print(sz)
             sz = int(sz)
