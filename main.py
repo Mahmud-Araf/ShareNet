@@ -167,7 +167,7 @@ def file_transfer():
             global filename
             global basename
             file = filedialog.askopenfile(initialdir=os.getcwd(), title='Select a File',
-                                          filetypes=(('file type', '*.txt'), ('all files', '*.*')))
+                                          filetypes=[('All Files', '*.*')])
             if file:
                 filename = file.name
                 basename = os.path.basename(filename)
