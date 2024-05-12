@@ -1,14 +1,12 @@
-from dotenv import load_dotenv
+
 from tkinter import *
-from vidstream import *
-import socket
-import threading
 from tkinter import filedialog
+import os,socket,ipaddress,threading,time
 from GradientFrame import GradientFrame
-import os
-
-
-# load_dotenv()
+from video_server import share_video_server,close_video_server
+from video_client import share_video_client,close_video_client
+from audio_server import share_audio_server,close_audio_server
+from audio_client import share_audio_client,close_audio_client
 
 root = Tk()
 root.title("ShareNet")
@@ -16,13 +14,18 @@ root.geometry("450x560")
 root.configure(bg="#f4fdfe")
 root.resizable(False, False)
 
-host = socket.gethostname()
-local_ip_address = socket.gethostbyname(host)
-server = StreamingServer(local_ip_address, 7777)
-receiver = AudioReceiver(local_ip_address, 6666)
 
 
-def screen_share():
+
+def is_valid_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
+
+def other_share():
+
     root.withdraw()
     window = Toplevel(root)
     window.title("Other Share")
@@ -35,46 +38,63 @@ def screen_share():
     gf.pack()
 
     def video_btn():
-        print("Video button pressed")
-        global camera_client
-        camera_client = CameraClient(SenderID.get(), 9999)
-        t3 = threading.Thread(target=camera_client.start_stream)
-        t3.start()
+        print("Video button clicked")
+        ip = IP_Input.get()
+        
+        if is_valid_ip(ip):
+            t1 = threading.Thread(target=share_video_server)
+            t2 = threading.Thread(target=share_video_client,args=(ip,))
+            t1.start()
+            time.sleep(0.5)
+            t2.start()
+
+    def cancel_video_btn():
+
+        print("Cancel video button pressed")
+
+        close_video_server()
+
+        time.sleep(0.5)
+
+        close_video_client()
+
+        window.protocol("WM_DELETE_WINDOW", on_closing)
+        
 
     def back_btn():
         print("Back button pressed")
         window.withdraw()
         root.deiconify()
-        server.stop_server()
-        receiver.stop_server()
+        
 
     def connect_btn():
         print("connect button pressed")
-        t1 = threading.Thread(target=server.start_server)
-        t2 = threading.Thread(target=receiver.start_server)
-        t1.start()
-        t2.start()
-        cnt_btn.destroy()
-        Label(window, text=f'       Connected     ', font=('Calibari', 20), bg='#f4fdfe', fg="#000").place(x=110, y=250)
+        ip = IP_Input.get()
+        if is_valid_ip(ip):
+            cnt_btn.destroy()
+            Label(window, text=f'      Connected      ', font=('Calibari', 20), bg='#f4fdfe', fg="#000").place(relx=0.5, y=250,anchor='center')
 
     def share_audio_btn():
         print("share your audio button pressed")
-        global audio_sender
-        audio_sender = AudioSender(SenderID.get(), 8888)
-        t5 = threading.Thread(target=audio_sender.start_stream)
-        t5.start()
+
+        ip = IP_Input.get()
+
+        if is_valid_ip(ip):
+            share_audio_server()
+            share_audio_client(ip)
+
+        
 
     def cancel_audio_btn():
-        print("cancel audio button pressed")
-        audio_sender.stop_stream()
-        window.protocol("WM_DELETE_WINDOW", on_closing)
-        # server.stop_server()
-        # receiver.stop_server()
+        print("Cancel audio button pressed")
 
-    def cancel_video_btn():
-        print("cancel video button pressed")
-        camera_client.stop_stream()
+        close_audio_server()
+        close_audio_client()
+        
         window.protocol("WM_DELETE_WINDOW", on_closing)
+
+
+    
 
     # icon
     image_icon1 = PhotoImage(file="Assets/screenshare.png")
@@ -82,39 +102,39 @@ def screen_share():
 
     host = socket.gethostname()
     ip_address = socket.gethostbyname(host)
-    Label(window, text=f'User IP: {ip_address}', bg='#fff', fg='#000', font=('Times New Roman', '20')).place(x=100, y=80)
+
+    Label(window, text=f'User IP: {ip_address}', bg='#fff', fg='#000', font=('Times New Roman', '20')).place(relx=0.5, y=80,anchor='center')
 
     global cnt_btn
     imgc = PhotoImage(file="Assets/connect.png")
     cnt_btn = Button(window, compound=LEFT, image=imgc,text="connect", width=280, font='caliabri 14 bold', bg='#f4fdfe', fg="#000",
                      command=connect_btn)
-    cnt_btn.place(x=110, y=250)
+    cnt_btn.place(relx=0.5, y=250,anchor='center')
 
-    SenderID = Entry(window, width=20, fg="black", border=4, bg='white', font=('arial', 15))
-    SenderID.place(x=110, y=190)
-    SenderID.focus()
-    SenderID.insert(0, "Give Receiver IP Address")
+    IP_Input = Entry(window, width=25, fg="black", border=4, bg='white', font=('arial', 15),justify='center')
+    IP_Input.place(relx=0.5, y=170,anchor='center')
+    IP_Input.focus()
+    IP_Input.insert(0, "Give Receiver IP Address")
     
-    img_audio = PhotoImage(file="Assets/audio.png")
-    Button(window, image=img_audio, bg='#ffd0df', bd=0,
-           command=share_audio_btn).place(x=175, y=330)
-    
+    connect_image = PhotoImage(file="Assets/audio.png")
+    Button(window, image=connect_image, bg='#ffd0df',activebackground='#ffd0df', bd=0,
+       command=share_audio_btn).place(relx=0.5, y=330, x=-50, anchor='center')
+
     cancel_image = PhotoImage(file="Assets/cancelcall.png")
-    Button(window, image=cancel_image, bg='#ffd0df', bd=0, 
-           command=cancel_audio_btn).place(x=290, y=330)
+    Button(window, image=cancel_image, bg='#ffd0df',activebackground='#ffd0df', bd=0, 
+       command=cancel_audio_btn).place(relx=0.5, y=330, x=50, anchor='center')
     
     
     imgv = PhotoImage(file="Assets/video.png")
-    Button(window, image=imgv, bg='#ffd0df', bd=0,
-           command=video_btn).place(x=175, y=410)
+    Button(window, image=imgv, bg='#ffd0df', bd=0,activebackground='#ffd0df',
+           command=video_btn).place(relx=0.5,x=-80, y=410)
     
     cancel_video_img = PhotoImage(file="Assets/videocancel.png")
-    Button(window, image=cancel_video_img, bg='#ffd0df', bd=0,
-           command=cancel_video_btn).place(x=290, y=420)
+    Button(window, image=cancel_video_img, bg='#ffd0df',activebackground='#ffd0df', bd=0,
+           command=cancel_video_btn).place(relx=0.5,x=30, y=420)
     
-    img = PhotoImage(file="Assets/back.png")
-    Button(window, compound=CENTER, image=img, height=30,
-            width=90, bg='#ffffff',command=back_btn).place(x=190, y=490)
+   
+    Button(window, text="Back",font=('Calibari',15,'bold'),height=1, width=6, bg='#ffffff', activebackground='#ffffff', command=back_btn).place(relx=0.5, y=520,anchor='center')
 
 
     def on_closing():
@@ -144,25 +164,25 @@ def file_transfer():
 
         global label1
         label1 = Label(root, text="Welcome to ShareNet!!", font=('Times New Roman', 20, 'bold'), bg="#f4fdfe")
-        label1.place(x=60, y=30)
+        label1.place(relx=0.5, y=30, anchor='center')
         
         global scrn_image
         scrn_image = PhotoImage(file="Assets/screenshare.png")
         global scrn_share
-        scrn_share = Button(root, image=scrn_image, bg="#f4fdfe", bd=0, command=screen_share)
-        scrn_share.place(x=180, y=150)
+        scrn_share = Button(root, image=scrn_image, bg="#f4fdfe", bd=0, command=other_share)
+        scrn_share.place(relx=0.5,anchor='center', y=150)
         global label2
         label2 = Label(root, text="Audio & Video Share", font=('Calibari', 17, 'bold'), bg="#f4fdfe")
-        label2.place(x=100, y=250)
+        label2.place(relx=0.5,anchor='center', y=250)
 
         global file_image
         file_image = PhotoImage(file="Assets/fileshare.png")
         global file_trans
         file_trans = Button(root, image=file_image, bg="#f4fdfe", bd=0, command=file_transfer)
-        file_trans.place(x=180, y=300)
+        file_trans.place(relx=0.5,anchor='center', y=350)
         global label3
         label3 = Label(root, text="File Transfer", font=('Calibari', 17, 'bold'), bg="#f4fdfe")
-        label3.place(x=150, y=400)
+        label3.place(relx=0.5,anchor='center', y=430)
 
     def Send():
         root.withdraw()
@@ -180,7 +200,7 @@ def file_transfer():
                 filename = file.name
                 basename = os.path.basename(filename)
                 print("Exact file name:", basename)
-                Label(window, text=f' {basename}', font=('Calibari', 13,), bg='#ffffff', fg="#000").place(x=114, y=305)
+                Label(window, text=f' {basename}', font=('Calibari', 13,), bg='#ffffff', fg="#000").place(relx=0.5,anchor='center', y=305)
 
         def sender():
             s = socket.socket()
@@ -237,7 +257,7 @@ def file_transfer():
                 print(f" Total {current_packet} Packet acknowledged.")
                 print("Data has been transmitted successfully...")
                 send_btn.destroy()
-                Label(window, text=f'Data has been transmitted successfully', font=('Calibari', 13,),bg='#ffffff', fg="#000").place(x=90, y=350)
+                Label(window, text=f'Data has been transmitted successfully', font=('Calibari', 13,),bg='#ffffff', fg="#000").place(relx=0.5,anchor='center', y=350)
 
         def back_btn():
             window.withdraw()
@@ -252,25 +272,25 @@ def file_transfer():
 
         host = socket.gethostname()
         ip_address = socket.gethostbyname(host)
-        Label(window, text=f'Sender IP: {ip_address}', bg='#ffffff', fg="#000", font=('Caliabri',15)).place(x=110, y=195)
+        Label(window, text=f'Sender IP: {ip_address}', bg='#ffffff', fg="#000", font=('Caliabri',15)).place(relx=0.5,anchor='center', y=195)
 
-        Button(window, text="Select File", width=20, height=1, font='arial 14 bold', bg='white', fg="black",relief='raised', command=select_file).place(x=110, y=250)
+        Button(window, text="Select File", width=20, height=1, font='arial 14 bold', bg='white', fg="black",relief='raised', command=select_file).place(relx=0.5,anchor='center', y=250)
 
 
         global send_btn
         imageicons = PhotoImage(file="Assets/sendarrow.png")
         send_btn = Button(window, text="Send", compound=LEFT, image=imageicons, 
                           width=280, font='caliabri 14 bold', bg='#ffffff', fg="#000",command=sender)
-        send_btn.place(x=110, y=350)
+        send_btn.place(relx=0.5,anchor='center', y=350)
         
         sel_file = Entry(window, width=20, fg="black", border=4, bg='white', font=('caliabri', 15))
-        sel_file.place(x=110, y=300)
+        sel_file.place(relx=0.5,anchor='center', y=300)
         sel_file.focus()
         sel_file.insert(0, "File Name...")
 
-        imgs = PhotoImage(file="Assets/back.png")
-        Button(window, compound=CENTER, image=imgs, height=30,
-               width=90, bg='#ffffff', command=back_btn).place(x=190, y=430)
+        
+        Button(window, text="Back",font=('Calibari',15,'bold'),height=1, width=6, bg='#ffffff', activebackground='#ffffff', command=back_btn).place(relx=0.5, y=520,anchor='center')
+
 
         def on_closing():
             print("User clicked close button")
@@ -321,7 +341,7 @@ def file_transfer():
             print("file has been received successfully..")
             rr.destroy()
             Label(main, text=f'File has been received successfully.....', font=('Acumin Variable Concept', 13,),
-                  bg='#7FFFD4', fg="#000").place(x=90, y=360)
+                  bg='#7FFFD4', fg="#000").place(relx=0.5,anchor='center', y=360)
 
         def back_btn():
             main.withdraw()
@@ -335,19 +355,19 @@ def file_transfer():
         Label(main, image=Hbackground).place(x=-2, y=-2)
 
         SenderID = Entry(main, width=20, fg="black", border=2, bg='white', font=('arial', 15))
-        SenderID.place(x=100, y=200)
+        SenderID.place(relx=0.5,anchor='center', y=200)
         SenderID.focus()
         SenderID.insert(0, "Sender IP..")
 
-        img = PhotoImage(file="Assets/back.png")
-        Button(main, compound=CENTER, image=img, height=30,
-               width=90, bg='#ffffff',command=back_btn).place(x=190, y=350)
+       
+        Button(main, text="Back",font=('Calibari',15,'bold'),height=1, width=6, bg='#ffffff', activebackground='#ffffff', command=back_btn).place(relx=0.5, y=520,anchor='center')
+
 
         imageicon = PhotoImage(file="Assets/rcvarrow.png")
         rr = Button(main, text="Receive", compound=LEFT, image=imageicon, width=280, bg='#ffffff', fg="#000",
                     font='arial 14 bold',
                     command=receiver)
-        rr.place(x=100, y=250)
+        rr.place(relx=0.5,anchor='center', y=250)
 
         def on_closing():
             print("User clicked close button")
@@ -360,7 +380,7 @@ def file_transfer():
 
     global label11
     label11 = Label(root, text="File transfer", font=('Calibari', 20, 'bold'), bg="#f4fdfe")
-    label11.place(x=20, y=30)
+    label11.place(relx=0.5,anchor='center', y=30)
 
     send_image = PhotoImage(file="Assets/sendbt.png")
     send = Button(root, image=send_image, bg="#f4fdfe", bd=0, command=Send)
@@ -376,9 +396,9 @@ def file_transfer():
     label33 = Label(root, text="Receive", font=('Calibari', 17, 'bold'), bg="#f4fdfe")
     label33.place(x=300, y=220)
 
-    bckbt = PhotoImage(file="Assets/back.png")
-    bck = Button(root, image=bckbt, bg="#f4fdfe", bd=0, command=back_press)
-    bck.place(x=180, y=350)
+    
+    bck = Button(root,text="Back",font=('Calibari', 15, 'bold'), bg="#ffffff", bd=0, command=back_press)
+    bck.place(relx=0.5,anchor='center', y=350)
     
     root.mainloop()
 
@@ -389,26 +409,26 @@ root.iconphoto(False, image_icon)
 
 global label1
 label1 = Label(root, text="Welcome to ShareNet!!", font=('Times New Roman', 20, 'bold'), bg="#f4fdfe")
-label1.place(x=60, y=30)
+label1.place(relx=0.5,anchor='center', y=30)
 
 
 global scrn_image
 scrn_image = PhotoImage(file="Assets/screenshare.png")
 global scrn_share
-scrn_share = Button(root, image=scrn_image, bg="#f4fdfe", bd=0, command=screen_share)
-scrn_share.place(x=180, y=150)
+scrn_share = Button(root, image=scrn_image, bg="#f4fdfe", bd=0, command=other_share)
+scrn_share.place(relx=0.5,anchor='center', y=150)
 global label2
 label2 = Label(root, text="Audio & Video Share", font=('Calibari', 17, 'bold'), bg="#f4fdfe")
-label2.place(x=100, y=250)
+label2.place(relx=0.5,anchor='center', y=250)
 
 global file_image
 file_image = PhotoImage(file="Assets/fileshare.png")
 global file_trans
 file_trans = Button(root, image=file_image, bg="#f4fdfe", bd=0, command=file_transfer)
-file_trans.place(x=180, y=300)
+file_trans.place(relx=0.5,anchor='center', y=350)
 global label3
 label3 = Label(root, text="File Transfer", font=('Calibari', 17, 'bold'), bg="#f4fdfe")
-label3.place(x=150, y=400)
+label3.place(relx=0.5,anchor='center', y=430)
 
 
 def on_closing():

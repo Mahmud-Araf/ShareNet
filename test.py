@@ -1,4 +1,4 @@
-from dotenv import load_dotenv
+
 from tkinter import *
 from vidstream import *
 import socket
@@ -8,7 +8,7 @@ from GradientFrame import GradientFrame
 import os
 
 
-# load_dotenv()
+
 
 root = Tk()
 root.title("ShareNet")
