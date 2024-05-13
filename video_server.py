@@ -2,7 +2,7 @@ import cv2,socket,pickle
 
 
 port = 2222
-ip = "localhost"
+ip = socket.gethostname()
 global is_running_server
 is_running_server = True
 

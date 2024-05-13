@@ -45,7 +45,7 @@ def other_share():
             t1 = threading.Thread(target=share_video_server)
             t2 = threading.Thread(target=share_video_client,args=(ip,))
             t1.start()
-            time.sleep(0.5)
+            time.sleep(5)
             t2.start()
 
     def cancel_video_btn():
