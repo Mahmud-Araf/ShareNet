@@ -28,7 +28,7 @@ def share_audio_server():
 
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    udp.bind(("localhost", port))
+    udp.bind(socket.gethostname(), port)
 
     try:
         while is_recording:
