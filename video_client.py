@@ -1,12 +1,10 @@
 import cv2,socket,pickle
 
 
-port = 2222
-
 global is_running_client
 is_running_client = True
 
-def share_video_client(ip):
+def share_video_client(ip,port):
 
     cap = cv2.VideoCapture(0)
 

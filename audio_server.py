@@ -6,13 +6,11 @@ CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
-port = 3333
-
-
+ip = socket.gethostname()
 global is_recording
 is_recording = True
 
-def share_audio_server():
+def share_audio_server(port):
 
     
     global is_recording
@@ -28,7 +26,7 @@ def share_audio_server():
 
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    udp.bind(socket.gethostname(), port)
+    udp.bind((ip, port))
 
     try:
         while is_recording:

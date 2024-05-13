@@ -7,14 +7,13 @@ CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 2
 RATE = 44100
-port = 3333
 
 global is_recording
 is_recording = True
 
 
 
-def share_audio_client(ip):
+def share_audio_client(ip,port):
      
     global is_recording
     is_recording = True

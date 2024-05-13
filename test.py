@@ -8,6 +8,11 @@ from video_client import share_video_client,close_video_client
 from audio_server import share_audio_server,close_audio_server
 from audio_client import share_audio_client,close_audio_client
 
+
+
+video_port = 2222
+audio_port = 3333
+
 root = Tk()
 root.title("ShareNet")
 root.geometry("450x560")
@@ -39,13 +44,14 @@ def other_share():
 
     def video_btn():
         print("Video button clicked")
+
         ip = IP_Input.get()
         
         if is_valid_ip(ip):
-            t1 = threading.Thread(target=share_video_server)
-            t2 = threading.Thread(target=share_video_client,args=(ip,))
+            t1 = threading.Thread(target=share_video_server,args=(video_port,))
+            t2 = threading.Thread(target=share_video_client,args=(ip,video_port,))
             t1.start()
-            time.sleep(5)
+            time.sleep(1)
             t2.start()
 
     def cancel_video_btn():
@@ -78,10 +84,14 @@ def other_share():
         print("share your audio button pressed")
 
         ip = IP_Input.get()
+        
 
         if is_valid_ip(ip):
-            share_audio_server()
-            share_audio_client(ip)
+            t1=threading.Thread(target=share_audio_server,args=(audio_port,))
+            t2=threading.Thread(target=share_audio_client,args=(ip,audio_port,))
+            t1.start()
+            time.sleep(1)
+            t2.start()
 
         
 
@@ -200,7 +210,7 @@ def file_transfer():
                 filename = file.name
                 basename = os.path.basename(filename)
                 print("Exact file name:", basename)
-                Label(window, text=f' {basename}', font=('Calibari', 13,), bg='#ffffff', fg="#000").place(relx=0.5,anchor='center', y=305)
+                Label(window, width=20, text=f' {basename}', font=('Calibari', 15,), bg='#ffffff', fg="#000").place(relx=0.5,anchor='center', y=300)
 
         def sender():
             s = socket.socket()

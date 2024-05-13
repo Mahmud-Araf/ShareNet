@@ -1,12 +1,11 @@
 import cv2,socket,pickle
 
 
-port = 2222
 ip = socket.gethostname()
 global is_running_server
 is_running_server = True
 
-def share_video_server():
+def share_video_server(port):
 
     global is_running_server
     is_running_server = True
