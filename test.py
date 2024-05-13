@@ -78,6 +78,7 @@ def other_share():
         ip = IP_Input.get()
         if is_valid_ip(ip):
             cnt_btn.destroy()
+            print("Connected")
             Label(window, text=f'      Connected      ', font=('Calibari', 20), bg='#f4fdfe', fg="#000").place(relx=0.5, y=250,anchor='center')
 
     def share_audio_btn():
