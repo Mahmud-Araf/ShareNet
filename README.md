@@ -39,8 +39,7 @@ We extend our gratitude to all contributors and users who have supported the dev
 
 **"Talk is cheap. Show me the code."**  
 – Linus Torvalds  
-
-![divider](https://via.placeholder.com/400x1/000000/FFFFFF/?text=+)  
+---
 
 🌟 Keep Coding! 🌟
 
