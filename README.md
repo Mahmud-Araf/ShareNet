@@ -35,7 +35,7 @@ We extend our gratitude to all contributors and users who have supported the dev
 [Mahmud Araf](https://www.facebook.com/mahmud.araf.33)</br>
 [Zisan Mahmud](https://www.facebook.com/profile.php?id=100012051467690)
 
-<div align="right">
+<div align="center">
 
 **"Talk is cheap. Show me the code."**  
 – Linus Torvalds  
